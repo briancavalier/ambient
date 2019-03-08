@@ -1,0 +1,20 @@
+{
+  "name": "ambient",
+  "version": "1.0.0",
+  "module": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "author": "Brian Cavalier <brian@briancavalier.com>",
+  "license": "MIT",
+  "scripts": {
+    "prepare": "yarn build",
+    "build": "tsc --module esnext",
+    "test": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^11.10.5",
+    "ts-node": "^8.0.3",
+    "typescript": "^3.3.3333"
+  }
+}
