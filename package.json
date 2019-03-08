@@ -13,8 +13,8 @@
     "test": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "^11.10.5",
-    "ts-node": "^8.0.3",
-    "typescript": "^3.3.3333"
+    "@types/node": "11.10.5",
+    "ts-node": "8.0.3",
+    "typescript": "3.3.3333"
   }
 }
