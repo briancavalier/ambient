@@ -1,4 +1,4 @@
-import { Cancel, chain, Fx, map, runPure, uncancelable, using } from '../src'
+import { Cancel, chain, Fx, map, runPure, uncancelable, use } from '../src'
 import { EOL } from 'os'
 import { createInterface } from 'readline'
 
@@ -22,12 +22,12 @@ const read: Fx<Read, string> =
   ({ read }, k) => read(k)
 
 // Helper to append newlines
-const addEOL = (s: string): string => `${s}${EOL}`
+const addEol = (s: string): string => `${s}${EOL}`
 
 // Effectful computation that prints a prompt, reads
 // user input and prints it.
 const echo: Fx<Print & Read, void> =
-  chain(() => chain(print, map(addEOL, read)), print('> '))
+  chain(() => chain(print, map(addEol, read)), print('> '))
 
 // To run echo, we need to provide usingrs for the
 // Read and Print effect
@@ -49,4 +49,4 @@ const env: Print & Read = {
 }
 
 // Loop echo forever using the effect usingrs
-runPure(using(env, forever(echo)))
+runPure(use(env, forever(echo)))
