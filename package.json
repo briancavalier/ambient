@@ -10,7 +10,7 @@
   "license": "MIT",
   "scripts": {
     "prepare": "yarn build",
-    "build": "microbundle",
+    "build": "microbundle -f es,cjs",
     "test": "tsc --noEmit"
   },
   "devDependencies": {
