@@ -1,7 +1,8 @@
 {
   "name": "ambient",
   "version": "1.0.0",
-  "module": "dist/index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.m.js",
   "files": [
     "dist"
   ],
@@ -9,11 +10,12 @@
   "license": "MIT",
   "scripts": {
     "prepare": "yarn build",
-    "build": "tsc --module esnext",
+    "build": "microbundle",
     "test": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "11.11.0",
+    "microbundle": "^0.11.0",
     "ts-node": "8.0.3",
     "typescript": "3.3.3333"
   }

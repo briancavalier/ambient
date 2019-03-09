@@ -42,3 +42,4 @@ node_modules/
 .env
 
 dist/
+.rts2_cache_*/
