@@ -9,13 +9,13 @@ The two most important pieces are:
 ```typescript
 type Fx<R, A> = (r: R, k: (a: A) => void) => Cancel
 
-const chain = <RA, RB, A, B>(f: (a: A) => Fx<RA, B>, e: Fx<RB, A>): Fx<RA & RB, B>
+function chain <RA, RB, A, B> (f: (a: A) => Fx<RA, B>, e: Fx<RB, A>): Fx<RA & RB, B>
 ```
 
 - `Fx` represents computations that must be performed in an environment.
-- `chain` sequences two `Fx` computations, producing a new, third `Fx` computation.
+- `chain` sequences two `Fx` computations, producing a third `Fx` computation.
 
-Notice the intersection `RA & RB` in the `chain` return type.  It's a key part of how all of this works.
+**Note the intersection `RA & RB` in the `chain` return type**.  It's a key part of what makes `Fx` powerful.
 
 ### Fx
 
