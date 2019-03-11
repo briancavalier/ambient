@@ -25,11 +25,13 @@ function runPure <A> (e: Fx<{}, A>, k: (a: A) => void = () => {}): Cancel
 
 ### Fx at a glance
 
-```typescript
-type Fx<R, A> = ...
-```
+We'll go into more depth on the `Fx` type later.  For now, let's keep it simple: `Fx` represents a computation that will produce an `A` only if executed in an environment that satisfies its set of requirements, `R`.
 
-We'll go into more depth on the `Fx` type later.  For now, let's keep it simple: `Fx` represents a computation that will produce an `A` only if executed in an environment that satisfies its set of requirements, `R`
+_For the next few sections_, think of `Fx` as a function:
+
+```typescript
+type Fx<R, A> = (r: R) => A
+```
 
 ### Computation in an environment
 
