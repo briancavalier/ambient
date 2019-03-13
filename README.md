@@ -1,51 +1,59 @@
 # Ambient
 
-Simple, strongly-typed, testable, effectful computation.
+Simple, strongly-typed, testable, effectful computations.
 
 ## How does it work?
 
-The important pieces are:
+Let's start with the types and some basic intuitions about the pieces:
 
 ```typescript
 type Fx<R, A> = ...
 
-function chain <RA, RB, A, B> (f: (a: A) => Fx<RB, B>, e: Fx<RA, A>): Fx<RA & RB, B>
+function chain <RA, RB, A, B> (f: (a: A) => Fx<RB, B>, fx: Fx<RA, A>): Fx<RA & RB, B>
 
-function use <RA, RB, A> (rb: RB, e: Fx<RA & RB, A>): Fx<RA, A>
+function use <RA, RB, A> (rb: RB, fx: Fx<RA & RB, A>): Fx<RA, A>
 
-function runPure <A> (e: Fx<{}, A>, k: (a: A) => void = () => {}): Cancel
+function runPure <A> (fx: Fx<{}, A>, k: (a: A) => void = () => {}): Cancel
 ```
 
-- `Fx` represents computations that must execute in an _environment_ which satisfies a set of requirements `R`.
-- `chain` _introduces_ requirements on the environment by combining two `Fx` computations to produce a third `Fx` computation.
-- `use` _eliminates_ requirements on the environment by satisfying some or all of them.
-- `runPure` executes a computation whose requirements have been _fully satisfied_.
+- `Fx` represents computations that must execute in an _environment_ which provides a set of resources `R`.
+- `chain` _aggregates_ resource requirements by combining two `Fx` computations to produce a third `Fx` computation.
+- `use` _eliminates_ resources requirements on the environment by providing some or all of the resources.
+- `runPure` executes a computation whose resource requirements have been _fully satisfied_.
 
-**Note the intersections `RA & RB` in `chain` and `use`**.  They are a key part of what makes `Fx` powerful.
+**Note the intersections `RA & RB` in `chain` and `use`**.  They are a key part of what makes `Fx` useful.
+
+### Environment
+
+An envrionment is an object containing a set of resources.  The resources can be anything: app configuration, a logger, a database API, a remote service API.
+
+_TODO: Add example_
 
 ### Fx at a glance
 
-We'll go into more depth on the `Fx` type later.  For now, let's keep it simple: `Fx` represents a computation that will produce an `A` only if executed in an environment that satisfies its set of requirements, `R`.
+We'll go into more depth on the `Fx` type later.  For now, let's keep it simple: `Fx` represents a computation that will produce an `A` only if executed in an environment that provides a set of resources, `R`.
 
-_For the next few sections_, think of `Fx` as a function:
+_For the next few sections_, think of `Fx` as being like a function:
 
 ```typescript
 type Fx<R, A> = (r: R) => A
 ```
 
-### Computation in an environment
+### Executing a computation
 
-_coming soon_
+If `Fx` is like a function, clearly we need to provide an `R` to execute it.  At first glance, then, `runPure` seems to have a confusing type:
 
-#### Executing a computation
+```typescript
+function runPure <A> (fx: Fx<{}, A>, ...): ...
+```
 
-_coming soon_
-
-#### Adding new requirements
-
-_coming soon_
+`runPure` seems only to be able to run computations that require no resources.  Read on.
 
 #### Satisfying requirements
+
+_coming soon_
+
+#### Aggregating requirements
 
 _coming soon_
 
