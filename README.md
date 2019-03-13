@@ -4,6 +4,8 @@ Simple, strongly-typed, testable, effectful computations.
 
 ## How does it work?
 
+**tl;dr** Reader, plus type intersection and subtraction to manipulate the Reader's environment.
+
 Let's start with the types and some basic intuitions about the pieces:
 
 ```typescript
