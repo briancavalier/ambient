@@ -47,13 +47,23 @@ If `Fx` is like a function, clearly we need to provide an `R` to execute it.  At
 function runPure <A> (fx: Fx<{}, A>, ...): ...
 ```
 
-`runPure` seems only to be able to run computations that require no resources.  Read on.
+`runPure` seems only to be able to execute computations that require no resources. We need a way to reduce the requirements of an `Fx` to none so that we can execute it with `runPure`.
 
-#### Satisfying requirements
+### Satisfying requirements
 
-_coming soon_
+Let's look at the type of `use`:
 
-#### Aggregating requirements
+```typescript
+function use <RA, RB, A> (rb: RB, fx: Fx<RA & RB, A>): Fx<RA, A>
+```
+
+Notice how the input, `fx`, requires `RA & RB`, and the output `Fx` requires only `RA`.  By providing an `RB`, `use` satisfies some or all of `fx`'s requirements.  To put it another way, by providing `RB`, `use` subtracts `RB` from `fx`'s requirements, leaving only `RA`.
+
+When `RB` contains a subset of the resources of `RA`, `use` returns an `Fx` with a smaller set of requirements.  The returned `Fx` will require only resources of `RA`, instead of resources of both `RB` and `RA`.
+
+Crucially, when `RB` contains _all_ the resources of `RA` (i.e. `RB` is the same as, or a width subtype of `RA`), `use` returns an `Fx` whose requirements have been fully satisfied, and can be executed with `runPure`.
+
+### Aggregating requirements
 
 _coming soon_
 
