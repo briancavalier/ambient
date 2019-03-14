@@ -2,9 +2,21 @@
 
 Simple, strongly-typed, testable, effectful computations.
 
-## How does it work?
+## What is this?
 
 **tl;dr** Reader, plus type intersection and subtraction to manipulate the Reader's environment.
+
+_coming soon_
+
+_TODO: Add example_
+
+## Why?
+
+* **Communication**: see what resources a computation will use just by looking at its type: database, remote service API, logger, etc.
+* **Safety**: only computations whose resource requirements have been fully satisfied can be executed.
+* **Testability**: easily test computations by providing test resources without "magic mocking", overwriting globals, or other error-prone approaches.
+
+## How does it work?
 
 Let's start with the types and some basic intuitions about the pieces:
 
@@ -27,7 +39,7 @@ function runPure <A> (fx: Fx<{}, A>, k: (a: A) => void = () => {}): Cancel
 
 ### Environment
 
-An envrionment is an object containing a set of resources.  The resources can be anything: app configuration, a logger, a database API, a remote service API.
+An environment is a set of resources.  The resources can be anything: app configuration, a logger, a database API, a remote service API.
 
 _TODO: Add example_
 
@@ -43,13 +55,13 @@ type Fx<R, A> = (r: R) => A
 
 ### Executing a computation
 
-If `Fx` is like a function, clearly we need to provide an `R` to execute it.  At first glance, then, `runPure` seems to have a confusing type:
+If `Fx` is like a function, clearly we need to provide an `R` to execute it.  At first glance, then, `runPure`'s type may seem confusing.
 
 ```typescript
 function runPure <A> (fx: Fx<{}, A>, ...): ...
 ```
 
-`runPure` seems only to be able to execute computations that require no resources. We need a way to reduce the requirements of an `Fx` to none so that we can execute it with `runPure`.
+It can only execute computations that require no resources. We need a way to reduce the requirements of an `Fx` to the empty set so that we can execute it with `runPure`.
 
 ### Satisfying requirements
 
@@ -59,19 +71,76 @@ Let's look at the type of `use`:
 function use <RA, RB, A> (rb: RB, fx: Fx<RA & RB, A>): Fx<RA, A>
 ```
 
-Notice how the input, `fx`, requires `RA & RB`, and the output `Fx` requires only `RA`.  By providing an `RB`, `use` satisfies some or all of `fx`'s requirements.  To put it another way, by providing `RB`, `use` subtracts `RB` from `fx`'s requirements, leaving only `RA`.
+Notice how the _input_, `fx`, requires `RA & RB`, and the _output_ `Fx` requires only `RA`.  By providing an `RB`, `use` satisfies some or all of `fx`'s requirements.  To put it another way, by providing `RB`, `use` subtracts `RB` from `fx`'s requirements, leaving only `RA`.
 
-When `RB` contains a subset of the resources of `RA`, `use` returns an `Fx` with a smaller set of requirements.  The returned `Fx` will require only resources of `RA`, instead of resources of both `RB` and `RA`.
+When `RB` contains a subset of the resources required by `fx`, `use` returns an `Fx` with a smaller set of requirements.
 
 Crucially, when `RB` contains _all_ the resources of `RA` (i.e. `RB` is the same as, or a width subtype of `RA`), `use` returns an `Fx` whose requirements have been fully satisfied, and can be executed with `runPure`.
 
-### Aggregating requirements
+### Building computations
 
-_coming soon_
+What if we have two computations:
+
+```typescript
+// User data access capability
+type UserService = {
+  lookupUserByUsername: (username: string) => Promise<User>
+}
+// Getting a User requires UserService
+function getUserByUsername(username: string): Fx<UserService, User> {
+  // ...
+}
+
+// Email sending capability
+type EmailService = {
+  sendMessage: (message: EmailMessage) => Promise<EmailSendStatus>
+}
+// Sending email requires EmailService
+function sendEmail(to: Email, subject: string, body: string): Fx<EmailService, EmailSendStatus> {
+  // ...
+}
+```
+
+It may seem that we need to call each, then call `use` twice to satisfy the requirements of each, and then call `runPure` on each.  Instead, we can use `chain`:
+
+```typescript
+function chain <RA, RB, A, B> (f: (a: A) => Fx<RB, B>, fx: Fx<RA, A>): Fx<RA & RB, B>
+```
+
+`chain` allows us to write a new computation that gets a User by username and then sends them an email. Note the intersection `RA & RB` in the _output_ `Fx`.
+
+In contrast to `use`, which has an intersection in its _input_ `Fx` and _eliminates_ requirements, `chain` has an intersection in its _output_ and _aggregates_ requirements.
+
+```typescript
+function sendWelcomeEmailToUsername (username: string): Fx<UserService & EmailService, EmailSendStatus> {
+  return chain(
+    getUserByName(username),
+    user => sendEmail(user.email, 'Welcome!', `Hi ${user.displayName}, welcome to the world of composable computations!`
+  )
+}
+```
+
+`sendWelcomeEmailToUsername` returns a computation that requires _both_ the `UserService` and `EmailService`.  To execute it, we need to provide the resources of both `getUserByUsername` and `sendEmail`.  And now we have a choice: we provide both in a single `use`, _or_ we can provide them separately in two `use` calls, whichever fits out needs best.  In either case, we can execute the final computation with a single call to `runPure`.
+
+Note that the explicit type annotations are not necessary and are included here for clarity/documentation. Typescript will infer them correctly.
+
+```typescript
+const userService: UserService = //...
+const emailService: EmailService = //...
+
+// Create a computation that will lookup user 'brian' and send a welcome email
+const fx: Fx<UserService & EmailService, EmailSendStatus> = sendWelcomeEmailToUsername('brian')
+
+// Provide all the required resources
+const pureFx: Fx<{}, EmailSendStatus> = use({ ...userService, ...emailService }, fx)
+
+// Go! Lookup user 'brian' and send a welcome email
+runPure(pureFx)
+```
 
 ### Fx in depth
 
-There's a lot going on in the `Fx` type, so let's break it down.
+There's a lot going on in the `Fx` type, so let's step through it from left to right.
 
 ```typescript
 type Fx<R, A> ...
