@@ -2,12 +2,13 @@ import { Cancel, chain, Env, map, runPure, uncancelable, use } from '../src'
 import { EOL } from 'os'
 import { createInterface } from 'readline'
 
-export const forever = <R, A>(fx: Env<R, A>): Env<R, never> =>
-  chain(() => forever(fx), fx)
+// Helper to loop a computation forever
+const forever = <R, A>(e: Env<R, A>): Env<R, never> =>
+  chain(() => forever(e), e)
 
 // Print effect and constructor
 type Print = {
-  print(s: string, k: (r: void) => void): Cancel
+  print (s: string, k: (r: void) => void): Cancel
 }
 
 const print = (s: string): Env<Print, void> =>
@@ -15,7 +16,7 @@ const print = (s: string): Env<Print, void> =>
 
 // Read effect and constructor
 type Read = {
-  read(k: (r: string) => void): Cancel
+  read (k: (r: string) => void): Cancel
 }
 
 const read: Env<Read, string> =
@@ -29,24 +30,24 @@ const addEol = (s: string): string => `${s}${EOL}`
 const echo: Env<Print & Read, void> =
   chain(() => chain(print, map(addEol, read)), print('> '))
 
-// To run echo, we need to provide usingrs for the
-// Read and Print effect
+// To run echo, we need to provide implementations of
+// Read and Print
 
-// We'll use node's readline to implement a Read usingr
-const rl = createInterface({
+// We'll use node's readline to implement Read
+const readline = createInterface({
   input: process.stdin,
   output: process.stdout
 })
 
-// Implement the Print and Read effect usingrs
-const env: Print & Read = {
+// Concrete Print and Read implementations
+const resources: Print & Read = {
   print: (s, k): Cancel =>
     uncancelable(k(void process.stdout.write(s))),
   read: k => {
-    rl.once('line', k)
-    return () => rl.removeListener('line', k)
+    readline.once('line', k)
+    return () => readline.removeListener('line', k)
   }
 }
 
 // Loop echo forever using the effect usingrs
-runPure(use(env, forever(echo)))
+runPure(use(resources, forever(echo)))
