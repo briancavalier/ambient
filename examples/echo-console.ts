@@ -1,52 +1,47 @@
-import { Cancel, chain, Fx, map, runPure, uncancelable, use } from '../src'
+import { Cancel, chain, Env, forever, map, runPure, use, withEnv } from '../src'
 import { EOL } from 'os'
 import { createInterface } from 'readline'
 
-export const forever = <R, A>(fx: Fx<R, A>): Fx<R, never> =>
-  chain(() => forever(fx), fx)
-
-// Print effect and constructor
+// Print capability
 type Print = {
-  print(s: string, k: (r: void) => void): Cancel
+  print (s: string): void
 }
 
-const print = (s: string): Fx<Print, void> =>
-  ({ print }, k) => print(s, k)
+const print = (s: string): Env<Print, void> =>
+  withEnv(({ print }) => print(s))
 
-// Read effect and constructor
+// Read capability
 type Read = {
-  read(k: (r: string) => void): Cancel
+  read (k: (r: string) => void): Cancel
 }
 
-const read: Fx<Read, string> =
+const read: Env<Read, string> =
   ({ read }, k) => read(k)
 
 // Helper to append newlines
-const addEol = (s: string): string => `${s}${EOL}`
+const addEol = (s: string): string => s + EOL
 
 // Effectful computation that prints a prompt, reads
 // user input and prints it.
-const echo: Fx<Print & Read, void> =
+const echo: Env<Print & Read, void> =
   chain(() => chain(print, map(addEol, read)), print('> '))
 
-// To run echo, we need to provide usingrs for the
-// Read and Print effect
+// To run echo, we need to provide implementations of
+// Print and Read
 
-// We'll use node's readline to implement a Read usingr
-const rl = createInterface({
-  input: process.stdin,
-  output: process.stdout
+// We'll use node's readline to implement Read
+const readline = createInterface({
+  input: process.stdin
 })
 
-// Implement the Print and Read effect usingrs
-const env: Print & Read = {
-  print: (s, k): Cancel =>
-    uncancelable(k(void process.stdout.write(s))),
+// Concrete Print and Read implementations
+const capabilities: Print & Read = {
+  print: s => void process.stdout.write(s),
   read: k => {
-    rl.once('line', k)
-    return () => rl.removeListener('line', k)
+    readline.once('line', k)
+    return () => readline.removeListener('line', k)
   }
 }
 
-// Loop echo forever using the effect usingrs
-runPure(use(env, forever(echo)))
+// Loop echo forever using the Print and Read capabilities
+runPure(use(capabilities, forever(echo)))
