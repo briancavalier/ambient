@@ -10,7 +10,7 @@
   "author": "Brian Cavalier <brian@briancavalier.com>",
   "license": "MIT",
   "scripts": {
-    "prepare": "yarn build",
+    "prepare": "npm run build",
     "build": "microbundle -f es,cjs",
     "test": "tsc --noEmit"
   },
