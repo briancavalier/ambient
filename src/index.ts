@@ -14,13 +14,19 @@ export const runPure = <A>(e: Env<{}, A>, k: (a: A) => void = () => {}): Cancel 
 export const pure = <A>(a: A): Env<{}, A> =>
   (_, k) => uncancelable(k(a))
 
-export const map = <R, A, B> (f: (a: A) => B, e: Env<R, A>): Env<R, B> =>
+export const map = <R, A, B>(e: Env<R, A>, f: (a: A) => B): Env<R, B> =>
   (r, k) => e(r, a => k(f(a)))
 
-export const chain = <RA, RB, A, B>(f: (a: A) => Env<RB, B>, e: Env<RA, A>): Env<RA & RB, B> =>
+export const chain = <RA, RB, A, B>(e: Env<RA, A>, f: (a: A) => Env<RB, B>): Env<RA & RB, B> =>
   (rab, k) => {
     let cancel = e(rab, a => {
       cancel = f(a)(rab, k)
     })
     return () => cancel()
   }
+
+export const withEnv = <R, A>(f: (r: R) => A): Env<R, A> =>
+  (r, k) => uncancelable(k(f(r)))
+
+export const forever = <R, A>(e: Env<R, A>): Env<R, never> =>
+  chain(e, _ => forever(e))

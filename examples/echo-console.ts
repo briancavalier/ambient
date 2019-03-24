@@ -1,4 +1,4 @@
-import { Cancel, chain, Env, forever, map, runPure, use, withEnv } from '../src'
+import { Cancel, chain, Env, forever, map, runPure, uncancelable, use, withEnv } from '../src'
 import { EOL } from 'os'
 import { createInterface } from 'readline'
 
@@ -8,7 +8,7 @@ type Print = {
 }
 
 const print = (s: string): Env<Print, void> =>
-  withEnv(({ print }) => print(s))
+  withEnv(r => r.print(s))
 
 // Read capability
 type Read = {
@@ -16,15 +16,19 @@ type Read = {
 }
 
 const read: Env<Read, string> =
-  ({ read }, k) => read(k)
+  (r, k) => r.read(k)
 
 // Helper to append newlines
 const addEol = (s: string): string => s + EOL
 
 // Effectful computation that prints a prompt, reads
 // user input and prints it.
-const echo: Env<Print & Read, void> =
-  chain(() => chain(print, map(addEol, read)), print('> '))
+const echo: Env<Print & Read, void> = chain(
+  print('> '),
+    _ => chain(
+      map(read, addEol),
+      print
+  ))
 
 // To run echo, we need to provide implementations of
 // Print and Read
