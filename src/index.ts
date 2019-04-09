@@ -5,7 +5,9 @@ export const uncancelable = <A> (_: A): Cancel =>
 
 export type Env<R, A> = (r: R, k: (a: A) => void) => Cancel
 
-export const use = <RA, RB, A>(rb: RB, e: Env<RA & RB, A>): Env<RA, A> =>
+type Subtract<T, T1 extends T> = Pick<T, Exclude<keyof T, keyof T1>>
+
+export const use = <RA, RB extends RA, A>(rb: RB, e: Env<RA, A>): Env<Subtract<RA, RB>, A> =>
   (ra, k) => e({ ...rb, ...ra } as RA & RB, k)
 
 export const runPure = <A>(e: Env<{}, A>, k: (a: A) => void = () => {}): Cancel =>

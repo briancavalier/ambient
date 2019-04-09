@@ -25,7 +25,9 @@ type Env<R, A> = ...
 
 function chain <RA, RB, A, B> (f: (a: A) => Env<RB, B>, e: Env<RA, A>): Env<RA & RB, B>
 
-function use <RA, RB, A> (rb: RB, e: Env<RA & RB, A>): Env<RA, A>
+type Subtract<T, T1 extends T> = Pick<T, Exclude<keyof T, keyof T1>>
+
+function use <RA, RB extends RA, A>(rb: RB, e: Env<RA, A>): Env<Subtract<RA, RB>, A>
 
 function runPure <A> (e: Env<{}, A>, k: (a: A) => void = () => {}): Cancel
 ```
@@ -35,7 +37,7 @@ function runPure <A> (e: Env<{}, A>, k: (a: A) => void = () => {}): Cancel
 - `use` _eliminates_ resources requirements on the environment by providing some or all of the resources.
 - `runPure` executes a computation whose resource requirements have been _fully satisfied_.
 
-**Note the intersections `RA & RB` in `chain` and `use`**.  They are a key part of what makes `Env` useful.
+**Note the intersection `RA & RB` in `chain` and the `Subtract` in `use`**.  They are a key part of what makes `Env` useful.
 
 ### Environment
 
@@ -68,14 +70,16 @@ It can only execute computations that require no resources. We need a way to red
 Let's look at the type of `use`:
 
 ```typescript
-function use <RA, RB, A> (rb: RB, e: Env<RA & RB, A>): Env<RA, A>
+type Subtract<T, T1 extends T> = Pick<T, Exclude<keyof T, keyof T1>>
+
+function use <RA, RB extends RA, A>(rb: RB, e: Env<RA, A>): Env<Subtract<RA, RB>, A>
 ```
 
-Notice how the _input_, `e`, requires `RA & RB`, and the _output_ `Env` requires only `RA`.  By providing an `RB`, `use` satisfies some or all of `e`'s requirements.  To put it another way, by providing `RB`, `use` subtracts `RB` from `e`'s requirements, leaving only `RA`.
+Notice how the _input_, `e`, requires `RA`, and the _output_ `Env` requires `Subtract<RA, RB>`.  By providing an `RB`, `use` satisfies some or all of `e`'s requirements.  To put it another way, by providing `RB`, `use` _subtracts_ `RB` from `e`'s requirements.
 
 When `RB` contains a subset of the resources required by `e`, `use` returns an `Env` with a smaller set of requirements.
 
-Crucially, when `RB` contains _all_ the resources of `RA` (i.e. `RB` is the same as, or a width subtype of `RA`), `use` returns an `Env` whose requirements have been fully satisfied, and can be executed with `runPure`.
+Crucially, when `RB` contains _all_ the resources of `RA` (i.e. `RB` is the same as `RA`), `use` returns an `Env` whose requirements have been fully satisfied, and can be executed with `runPure`.
 
 ### Building computations
 
@@ -109,7 +113,7 @@ function chain <RA, RB, A, B> (f: (a: A) => Env<RB, B>, e: Env<RA, A>): Env<RA &
 
 `chain` allows us to write a new computation that gets a User by username and then sends them an email. Note the intersection `RA & RB` in the _output_ `Env`.
 
-In contrast to `use`, which has an intersection in its _input_ `Env` and _eliminates_ requirements, `chain` has an intersection in its _output_ and _aggregates_ requirements.
+In contrast to `use`, which uses subtraction to _eliminate_ requirements, `chain` uses an intersection to _aggregate_ requirements.
 
 ```typescript
 function sendWelcomeEmailToUsername (username: string): Env<UserService & EmailService, EmailSendStatus> {
