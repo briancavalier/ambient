@@ -1,10 +1,11 @@
-import { Cancel, chain, Env, forever, map, runPure, uncancelable, use, withEnv } from '../src'
 import { EOL } from 'os'
 import { createInterface } from 'readline'
 
+import { Cancel, chain, Env, forever, map, runPure, uncancelable, use, withEnv, pure } from '../src'
+
 // Print capability
 type Print = {
-  print (s: string): void
+  print(s: string): void
 }
 
 const print = (s: string): Env<Print, void> =>
@@ -12,7 +13,7 @@ const print = (s: string): Env<Print, void> =>
 
 // Read capability
 type Read = {
-  read (k: (r: string) => void): Cancel
+  read(k: (r: string) => void): Cancel
 }
 
 const read: Env<Read, string> =
@@ -25,9 +26,9 @@ const addEol = (s: string): string => s + EOL
 // user input and prints it.
 const echo: Env<Print & Read, void> = chain(
   print('> '),
-    _ => chain(
-      map(read, addEol),
-      print
+  _ => chain(
+    map(read, addEol),
+    print
   ))
 
 // To run echo, we need to provide implementations of
@@ -48,4 +49,5 @@ const capabilities: Print & Read = {
 }
 
 // Loop echo forever using the Print and Read capabilities
-runPure(use(capabilities, forever(echo)))
+const x = use(capabilities, forever(echo))
+runPure(x)

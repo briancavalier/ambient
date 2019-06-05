@@ -25,11 +25,13 @@ type Env<R, A> = ...
 
 function chain <RA, RB, A, B> (f: (a: A) => Env<RB, B>, e: Env<RA, A>): Env<RA & RB, B>
 
-type Subtract<T, T1 extends T> = Pick<T, Exclude<keyof T, keyof T1>>
+type Subtract<T, T1> = Omit<T, keyof T1>
 
-function use <RA, RB extends RA, A>(rb: RB, e: Env<RA, A>): Env<Subtract<RA, RB>, A>
+function use <RA, RB, A>(rb: RB, e: Env<RA, A>): Env<Subtract<RA, RB>, A>
 
-function runPure <A> (e: Env<{}, A>, k: (a: A) => void = () => {}): Cancel
+type None = ...
+
+function runPure <A> (e: Env<None, A>, k: (a: A) => void = () => {}): Cancel
 ```
 
 - `Env` represents computations that must execute in an _environment_ which provides a set of resources `R`.
@@ -60,7 +62,7 @@ type Env<R, A> = (r: R) => A
 If `Env` is like a function, clearly we need to provide an `R` to execute it.  At first glance, then, `runPure`'s type may seem confusing.
 
 ```typescript
-function runPure <A> (e: Env<{}, A>, ...): ...
+function runPure <A> (e: Env<None, A>, ...): ...
 ```
 
 It can only execute computations that require no resources. We need a way to reduce the requirements of an `Env` to the empty set so that we can execute it with `runPure`.
@@ -70,16 +72,16 @@ It can only execute computations that require no resources. We need a way to red
 Let's look at the type of `use`:
 
 ```typescript
-type Subtract<T, T1 extends T> = Pick<T, Exclude<keyof T, keyof T1>>
+type Subtract<T, T1> = Omit<T, keyof T1>
 
-function use <RA, RB extends RA, A>(rb: RB, e: Env<RA, A>): Env<Subtract<RA, RB>, A>
+function use <RA, RB, A>(rb: RB, e: Env<RA, A>): Env<Subtract<RA, RB>, A>
 ```
 
 Notice how the _input_, `e`, requires `RA`, and the _output_ `Env` requires `Subtract<RA, RB>`.  By providing an `RB`, `use` satisfies some or all of `e`'s requirements.  To put it another way, by providing `RB`, `use` _subtracts_ `RB` from `e`'s requirements.
 
 When `RB` contains a subset of the resources required by `e`, `use` returns an `Env` with a smaller set of requirements.
 
-Crucially, when `RB` contains _all_ the resources of `RA` (i.e. `RB` is the same as `RA`), `use` returns an `Env` whose requirements have been fully satisfied, and can be executed with `runPure`.
+Crucially, when `RB` contains _all_ the resources of `RA` (e.g., `RB` is the same as `RA`), `use` returns an `Env` whose requirements have been fully satisfied, and can be executed with `runPure`.
 
 ### Building computations
 

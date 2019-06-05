@@ -1,19 +1,22 @@
 export type Cancel = () => void
 
-export const uncancelable = <A> (_: A): Cancel =>
+export const uncancelable = <A>(_: A): Cancel =>
   () => {}
 
 export type Env<R, A> = (r: R, k: (a: A) => void) => Cancel
+  
+export type None = { [k: string]: never }
+export type Any = {}
 
-type Subtract<T, T1 extends T> = Pick<T, Exclude<keyof T, keyof T1>>
+export type Subtract<T, T1 extends T> = Omit<T, keyof T1>
 
 export const use = <RA, RB extends RA, A>(rb: RB, e: Env<RA, A>): Env<Subtract<RA, RB>, A> =>
   (ra, k) => e({ ...rb, ...ra } as RA & RB, k)
 
-export const runPure = <A>(e: Env<{}, A>, k: (a: A) => void = () => {}): Cancel =>
+export const runPure = <A>(e: Env<None, A>, k: (a: A) => void = () => { }): Cancel =>
   e({}, k)
 
-export const pure = <A>(a: A): Env<{}, A> =>
+export const pure = <A>(a: A): Env<Any, A> =>
   (_, k) => uncancelable(k(a))
 
 export const map = <R, A, B>(e: Env<R, A>, f: (a: A) => B): Env<R, B> =>
