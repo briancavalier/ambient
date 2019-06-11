@@ -1,7 +1,7 @@
 import { EOL } from 'os'
 import { createInterface } from 'readline'
 
-import { Cancel, chain, Env, forever, map, runPure, uncancelable, use, withEnv, pure } from '../src'
+import { Cancel, chain, Env, map, runPure, use, withEnv } from '../src'
 
 // Print capability
 type Print = {
@@ -47,6 +47,10 @@ const capabilities: Print & Read = {
     return () => readline.removeListener('line', k)
   }
 }
+
+// Simple helper to repeat a computation forever.
+export const forever = <R, A>(e: Env<R, A>): Env<R, never> =>
+  chain(e, _ => forever(e))
 
 // Loop echo forever using the Print and Read capabilities
 const x = use(capabilities, forever(echo))
