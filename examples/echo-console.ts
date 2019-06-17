@@ -44,7 +44,11 @@ const capabilities: Print & Read = {
   print: s => void process.stdout.write(s),
   read: k => {
     readline.once('line', k)
-    return () => readline.removeListener('line', k)
+    return k => {
+      readline.removeListener('line', k)
+      readline.close()
+      k()
+    }
   }
 }
 
