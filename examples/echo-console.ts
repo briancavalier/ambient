@@ -13,7 +13,7 @@ const print = (s: string): Env<Print, void> =>
 
 // Read capability
 type Read = {
-  read(k: (r: string) => void): Cancel
+  read(k: (r: string) => Cancel): Cancel
 }
 
 const read: Env<Read, string> =
@@ -44,10 +44,10 @@ const capabilities: Print & Read = {
   print: s => void process.stdout.write(s),
   read: k => {
     readline.once('line', k)
-    return k => {
+    return ck => {
       readline.removeListener('line', k)
       readline.close()
-      k()
+      ck()
     }
   }
 }
