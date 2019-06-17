@@ -10,14 +10,14 @@ export const uncancelable = (_: unknown): Cancel =>
 // environment which provides a set of resources `R`
 export type Env<R, A> = (r: R, k: (a: A) => void) => Cancel
 
+// A set of resources formed by subtracting the set T1 from T
+export type Subtract<T, T1 extends T> = Omit<T, keyof T1>
+
 // An empty set of resources
-export type None = { [k: string]: never }
+export type None = Subtract<{}, {}>
 
 // Any set of resources
 export type Any = {}
-
-// A set of resources formed by subtracting the set T1 from T
-export type Subtract<T, T1 extends T> = Omit<T, keyof T1>
 
 // Satisfy some or all of e's requirements.  If RA is a subset
 // of RB, then the resulting Env will be "pure".  It's
