@@ -2,7 +2,7 @@
 export type Cancel = (k: (e?: Error) => void) => void
 
 // A Cancel that can't be canceled
-export const uncancelable: Cancel = (k: (e?: Error) => void) =>
+export const uncancelable: Cancel = k =>
   k(new Error('uncancelable'))
 
 // Env represents a computation that must execute in an
@@ -28,7 +28,7 @@ export const runPure = <A>(e: Env<None, A>, k: (a: A) => Cancel = () => uncancel
 
 // A pure value computation has no specific requirements, and
 // thus can "execute" in any environment.
-export const pure = <A>(a: A): Env<any, A> =>
+export const pure = <A>(a: A): Env<Subtract<{}, {}>, A> =>
   (_, k) => k(a)
 
 // Transform a computation's result without changing its
