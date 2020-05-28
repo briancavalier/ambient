@@ -17,7 +17,7 @@
   "devDependencies": {
     "@types/node": "12.12.42",
     "microbundle": "0.12.0",
-    "ts-node": "8.10.1",
+    "ts-node": "8.10.2",
     "typescript": "3.9.3"
   }
 }
