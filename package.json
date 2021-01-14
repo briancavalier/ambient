@@ -15,7 +15,7 @@
     "test": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "12.19.13",
+    "@types/node": "12.19.14",
     "microbundle": "0.13.0",
     "ts-node": "8.10.2",
     "typescript": "3.9.7"
